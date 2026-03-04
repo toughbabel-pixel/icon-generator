@@ -1,4 +1,4 @@
-function Shape({ shape, color }) {
+function BackgroundShape({ shape, color }) {
   if (shape === 'square') {
     return <rect x="10%" y="10%" width="80%" height="80%" fill={color} />
   }
@@ -20,26 +20,56 @@ function Shape({ shape, color }) {
   return <circle cx="50%" cy="50%" r="40%" fill={color} />
 }
 
-function IconPreview({ IconComponent, iconName, iconColor, backgroundColor, backgroundShape, strokeWidth, iconSize }) {
+function IconPreview({ selectedIcon, settings }) {
+  const IconComponent = selectedIcon.component
+  const iconFill = settings.iconStyle === 'fill' ? settings.iconColor : 'none'
+  const iconStroke = settings.iconStyle === 'stroke' ? settings.iconColor : 'none'
+
   return (
     <section className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-col items-center gap-4">
         <svg
           id="icon-generator-svg"
           xmlns="http://www.w3.org/2000/svg"
-          width={iconSize}
-          height={iconSize}
+          width={settings.iconSize}
+          height={settings.iconSize}
           viewBox="0 0 200 200"
           className="drop-shadow-md"
           role="img"
-          aria-label={`${iconName} icon preview`}
+          aria-label={`${selectedIcon.name} preview`}
         >
-          <Shape shape={backgroundShape} color={backgroundColor} />
-          <g transform="translate(50 50)">
-            <IconComponent color={iconColor} size={100} strokeWidth={strokeWidth} />
+          {!settings.transparentBackground && (
+            <BackgroundShape shape={settings.backgroundShape} color={settings.backgroundColor} />
+          )}
+
+          <g
+            transform="translate(50 50)"
+            fill={iconFill}
+            stroke={iconStroke}
+            strokeWidth={settings.strokeWidth}
+            strokeLinecap={settings.strokeLinecap}
+            strokeLinejoin={settings.strokeLinejoin}
+          >
+            {selectedIcon.type === 'custom' ? (
+              <svg viewBox={selectedIcon.viewBox} width="100" height="100" x="0" y="0">
+                <g dangerouslySetInnerHTML={{ __html: selectedIcon.content }} />
+              </svg>
+            ) : (
+              <IconComponent
+                size={100}
+                strokeWidth={settings.strokeWidth}
+                stroke={iconStroke}
+                fill={iconFill}
+                strokeLinecap={settings.strokeLinecap}
+                strokeLinejoin={settings.strokeLinejoin}
+              />
+            )}
           </g>
         </svg>
-        <p className="text-sm text-slate-500">Live preview ({iconSize}px)</p>
+
+        <p className="text-sm text-slate-500">
+          Live preview for <span className="font-medium capitalize">{selectedIcon.name}</span> ({settings.iconSize}px)
+        </p>
       </div>
     </section>
   )

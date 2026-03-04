@@ -26,6 +26,8 @@ export function parseAndNormalizeSvg(svgText) {
     node.removeAttribute('stroke-linecap')
     node.removeAttribute('stroke-linejoin')
     node.removeAttribute('style')
+    node.removeAttribute('onload')
+    node.removeAttribute('onclick')
   })
 
   return {
@@ -35,19 +37,15 @@ export function parseAndNormalizeSvg(svgText) {
 }
 
 export function svgToJsx(svgMarkup) {
-  return `export function Icon(props) {\n  return (\n    ${svgMarkup
+  const jsxMarkup = svgMarkup
     .replace(/class=/g, 'className=')
     .replace(/stroke-width=/g, 'strokeWidth=')
     .replace(/stroke-linecap=/g, 'strokeLinecap=')
     .replace(/stroke-linejoin=/g, 'strokeLinejoin=')
     .replace(/fill-rule=/g, 'fillRule=')
     .replace(/clip-rule=/g, 'clipRule=')
-    .replace(/([a-zA-Z-]+)=\"([^\"]*)\"/g, (match, attr, value) => {
-      if (attr.includes('-')) return `${camelCase(attr)}=\"${value}\"`
-      return match
-    })} \n  );\n}`
-}
 
-function camelCase(input) {
-  return input.replace(/-([a-z])/g, (_, char) => char.toUpperCase())
+  const withProps = jsxMarkup.replace('<svg ', '<svg {...props} ')
+
+  return `export function Icon(props) {\n  return (\n    ${withProps}\n  );\n}`
 }

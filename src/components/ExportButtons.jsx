@@ -1,9 +1,15 @@
+import { svgToJsx } from '../utils/svgUtils'
+
 function downloadFile(url, name) {
   const link = document.createElement('a')
   link.href = url
   link.download = name
   link.click()
   URL.revokeObjectURL(url)
+}
+
+function getSvgNode() {
+  return document.getElementById('icon-generator-svg')
 }
 
 async function svgToCanvas(svgElement, size) {
@@ -22,14 +28,16 @@ async function svgToCanvas(svgElement, size) {
   canvas.width = size
   canvas.height = size
   const context = canvas.getContext('2d')
+
+  context.clearRect(0, 0, size, size)
   context.drawImage(image, 0, 0, size, size)
+
   URL.revokeObjectURL(url)
 
   return canvas
 }
 
 function ExportButtons({ iconName, iconSize }) {
-  const getSvgNode = () => document.getElementById('icon-generator-svg')
 
   const downloadSvg = () => {
     const svgNode = getSvgNode()
@@ -37,6 +45,7 @@ function ExportButtons({ iconName, iconSize }) {
 
     const serialized = new XMLSerializer().serializeToString(svgNode)
     const blob = new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' })
+
     downloadFile(URL.createObjectURL(blob), `${iconName}.svg`)
   }
 
@@ -45,6 +54,7 @@ function ExportButtons({ iconName, iconSize }) {
     if (!svgNode) return
 
     const canvas = await svgToCanvas(svgNode, iconSize)
+
     canvas.toBlob((blob) => {
       if (!blob) return
       downloadFile(URL.createObjectURL(blob), `${iconName}.png`)
@@ -56,10 +66,27 @@ function ExportButtons({ iconName, iconSize }) {
     if (!svgNode) return
 
     const canvas = await svgToCanvas(svgNode, 256)
+
     canvas.toBlob((blob) => {
       if (!blob) return
       downloadFile(URL.createObjectURL(blob), `${iconName}.ico`)
     }, 'image/png')
+  }
+
+  const copySvg = async () => {
+    const svgNode = getSvgNode()
+    if (!svgNode) return
+
+    const serialized = new XMLSerializer().serializeToString(svgNode)
+    await navigator.clipboard.writeText(serialized)
+  }
+
+  const copyJsx = async () => {
+    const svgNode = getSvgNode()
+    if (!svgNode) return
+
+    const serialized = new XMLSerializer().serializeToString(svgNode)
+    await navigator.clipboard.writeText(svgToJsx(serialized))
   }
 
   return (
@@ -71,6 +98,7 @@ function ExportButtons({ iconName, iconSize }) {
       >
         Download PNG
       </button>
+
       <button
         type="button"
         onClick={downloadSvg}
@@ -78,12 +106,29 @@ function ExportButtons({ iconName, iconSize }) {
       >
         Download SVG
       </button>
+
       <button
         type="button"
         onClick={downloadIco}
         className="w-full rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
       >
         Download ICO
+      </button>
+
+      <button
+        type="button"
+        onClick={copySvg}
+        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+      >
+        Copy SVG
+      </button>
+
+      <button
+        type="button"
+        onClick={copyJsx}
+        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+      >
+        Copy JSX
       </button>
     </div>
   )
